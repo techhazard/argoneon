@@ -579,40 +579,45 @@ def display_defaultimg():
     oled_fill(0)
     oled_reset()
 
-if len(sys.argv) > 1:
-    cmd = sys.argv[1].upper()
-    if cmd == "SHUTDOWN":
-        # Signal poweroff
-        logInfo( "SHUTDOWN requested via shutdown of command of argononed service")
-        setFanOff()
-        bus.write_byte(ADDR_FAN,0xFF)
-        
-    elif cmd == "FANOFF":
-        # Turn off fan
-        setFanOff()
-        logInfo( "FANOFF requested via fanoff command of the argononed service")
-        if OLED_ENABLED == True:
-            display_defaultimg()
 
-    elif cmd == "SERVICE":
-        # Starts the power button and temperature monitor threads
-        try:
-            logInfo( "argononed service version " + ARGON_VERSION + " starting.")
-            ipcq = Queue()
-            t1 = Thread(target = shutdown_check, args =(ipcq, ))
+def main():
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1].upper()
+        if cmd == "SHUTDOWN":
+            # Signal poweroff
+            logInfo( "SHUTDOWN requested via shutdown of command of argononed service")
+            setFanOff()
+            bus.write_byte(ADDR_FAN,0xFF)
 
-            t2 = Thread(target = temp_check)
+        elif cmd == "FANOFF":
+            # Turn off fan
+            setFanOff()
+            logInfo( "FANOFF requested via fanoff command of the argononed service")
             if OLED_ENABLED == True:
-                t3 = Thread(target = display_loop, args =(ipcq, ))
+                display_defaultimg()
 
-            t1.start()
-            t2.start()
-            if OLED_ENABLED == True:
-                t3.start()
-            ipcq.join()
-        except:
-            GPIO.cleanup()
+        elif cmd == "SERVICE":
+            # Starts the power button and temperature monitor threads
+            try:
+                logInfo( "argononed service version " + ARGON_VERSION + " starting.")
+                ipcq = Queue()
+                t1 = Thread(target = shutdown_check, args =(ipcq, ))
 
-    elif cmd == "VERSION":
-        print( "Version: " + ARGON_VERSION )
+                t2 = Thread(target = temp_check)
+                if OLED_ENABLED == True:
+                    t3 = Thread(target = display_loop, args =(ipcq, ))
 
+                t1.start()
+                t2.start()
+                if OLED_ENABLED == True:
+                    t3.start()
+                ipcq.join()
+            except:
+                GPIO.cleanup()
+
+        elif cmd == "VERSION":
+            print( "Version: " + ARGON_VERSION )
+
+
+if __name__ == '__main__':
+    main()

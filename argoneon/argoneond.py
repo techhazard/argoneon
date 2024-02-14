@@ -943,73 +943,77 @@ def setNextAlarm(commandschedulelist, prevdatetime):
     # This will ensure that this will be replaced next iteration
     return curtime
 
-######
-if len(sys.argv) > 1:
-    cmd = sys.argv[1].upper()
 
-    # Enable Alarm/Timer Flags
-    enableflag = True
+def main():
+    if len(sys.argv) > 1:
+        cmd = sys.argv[1].upper()
 
-    if cmd == "CLEAN":
-        removeRTCAlarm()
-        removeRTCTimer()
-    elif cmd == "SHUTDOWN":
-        clearRTCAlarmFlag()
-        clearRTCTimerFlag()
+        # Enable Alarm/Timer Flags
+        enableflag = True
 
-    elif cmd == "GETRTCTIME":
-        print("RTC Time:", getRTCdatetime())
-
-    elif cmd == "UPDATERTCTIME":
-        setRTCdatetime(datetime.datetime.now())
-        print("RTC Time:", getRTCdatetime())
-
-    elif cmd == "GETSCHEDULELIST":
-        describeConfigList(RTC_CONFIGFILE)
-
-    elif cmd == "SHOWSCHEDULE":
-        if len(sys.argv) > 2:
-            if sys.argv[2].isdigit():
-                # Display starts at 2, maps to 0-based index
-                configidx = int(sys.argv[2])-2
-                configlist = loadConfigList(RTC_CONFIGFILE)
-                if len(configlist) > configidx:
-                    print ("  ",describeConfigListEntry(configlist[configidx]))
-                else:
-                    print("   Invalid Schedule")
-
-    elif cmd == "REMOVESCHEDULE":
-        if len(sys.argv) > 2:
-            if sys.argv[2].isdigit():
-                # Display starts at 2, maps to 0-based index
-                configidx = int(sys.argv[2])-2
-                removeConfigEntry(RTC_CONFIGFILE, configidx)
-
-    elif cmd == "SERVICE":
-        syncSystemTime()
-        commandschedulelist = formCommandScheduleList(loadConfigList(RTC_CONFIGFILE))
-        nextrtcalarmtime = setNextAlarm(commandschedulelist, datetime.datetime.now())
-        serviceloop = True
-        while serviceloop==True:
+        if cmd == "CLEAN":
+            removeRTCAlarm()
+            removeRTCTimer()
+        elif cmd == "SHUTDOWN":
             clearRTCAlarmFlag()
             clearRTCTimerFlag()
 
-            tmpcurrenttime = datetime.datetime.now()
-            if nextrtcalarmtime <= tmpcurrenttime:
-                # Update RTC Alarm to next iteration
-                nextrtcalarmtime = setNextAlarm(commandschedulelist, nextrtcalarmtime)
-            elif len(getCommandForTime(commandschedulelist, tmpcurrenttime, "off")) > 0:
-                # Shutdown detected, issue command then end service loop
-                os.system("shutdown now -h")
-                serviceloop = False
-                # Don't break to sleep while command executes (prevents service to restart)
-            
+        elif cmd == "GETRTCTIME":
+            print("RTC Time:", getRTCdatetime())
 
-            time.sleep(60)
+        elif cmd == "UPDATERTCTIME":
+            setRTCdatetime(datetime.datetime.now())
+            print("RTC Time:", getRTCdatetime())
+
+        elif cmd == "GETSCHEDULELIST":
+            describeConfigList(RTC_CONFIGFILE)
+
+        elif cmd == "SHOWSCHEDULE":
+            if len(sys.argv) > 2:
+                if sys.argv[2].isdigit():
+                    # Display starts at 2, maps to 0-based index
+                    configidx = int(sys.argv[2])-2
+                    configlist = loadConfigList(RTC_CONFIGFILE)
+                    if len(configlist) > configidx:
+                        print ("  ",describeConfigListEntry(configlist[configidx]))
+                    else:
+                        print("   Invalid Schedule")
+
+        elif cmd == "REMOVESCHEDULE":
+            if len(sys.argv) > 2:
+                if sys.argv[2].isdigit():
+                    # Display starts at 2, maps to 0-based index
+                    configidx = int(sys.argv[2])-2
+                    removeConfigEntry(RTC_CONFIGFILE, configidx)
+
+        elif cmd == "SERVICE":
+            syncSystemTime()
+            commandschedulelist = formCommandScheduleList(loadConfigList(RTC_CONFIGFILE))
+            nextrtcalarmtime = setNextAlarm(commandschedulelist, datetime.datetime.now())
+            serviceloop = True
+            while serviceloop==True:
+                clearRTCAlarmFlag()
+                clearRTCTimerFlag()
+
+                tmpcurrenttime = datetime.datetime.now()
+                if nextrtcalarmtime <= tmpcurrenttime:
+                    # Update RTC Alarm to next iteration
+                    nextrtcalarmtime = setNextAlarm(commandschedulelist, nextrtcalarmtime)
+                elif len(getCommandForTime(commandschedulelist, tmpcurrenttime, "off")) > 0:
+                    # Shutdown detected, issue command then end service loop
+                    os.system("shutdown now -h")
+                    serviceloop = False
+                    # Don't break to sleep while command executes (prevents service to restart)
+
+                time.sleep(60)
 
 
-elif False:
-    print("System Time: ", datetime.datetime.now())
-    print("RTC    Time: ", getRTCdatetime())
+    elif False:
+        print("System Time: ", datetime.datetime.now())
+        print("RTC    Time: ", getRTCdatetime())
 
-    describeControlRegisters()
+        describeControlRegisters()
+
+
+if __name__ == '__main__':
+    main()
