@@ -19,7 +19,14 @@
     packages = forAllSystems (system: let
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = pkgs.${system}; }) mkPoetryApplication;
     in rec {
-      argoneon = mkPoetryApplication { projectDir = self; };
+      argoneon = mkPoetryApplication {
+        projectDir = self;
+        postInstall = ''
+          cp -r oled/ $out/oled/
+          substituteInPlace $out/lib/python*/site-packages/argoneon/argoneonoled.py \
+            --replace "/etc/argon/oled" "$out/oled"
+        '';
+      };
       default = argoneon;
     });
 
