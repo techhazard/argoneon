@@ -137,7 +137,7 @@ daemonconfigfile=/etc/$daemonname.conf
 daemonfanservice=/lib/systemd/system/$daemonname.service
 
 # Fan Daemon/Service Files
-sudo curl -L $ARGONDOWNLOADSERVER/argononed.py -o $powerbuttonscript --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argononed.py -o $powerbuttonscript --silent
 sudo chmod 644 $powerbuttonscript
 sudo curl -L $ARGONDOWNLOADSERVER/argononed.service -o $daemonfanservice --silent
 sudo chmod 644 $daemonfanservice
@@ -150,13 +150,13 @@ sudo chmod 755 $irconfigscript
 sudo curl -L $ARGONDOWNLOADSERVER/argon-versioninfo.sh -o $versioninfoscript --silent
 sudo chmod 755 $versioninfoscript
 
-sudo curl -L $ARGONDOWNLOADSERVER/argonsysinfo.py -o $INSTALLATIONFOLDER/argonsysinfo.py --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argonsysinfo.py -o $INSTALLATIONFOLDER/argonsysinfo.py --silent
 sudo chmod 755 $INSTALLATIONFOLDER/argonsysinfo.py
-sudo curl -L $ARGONDOWNLOADSERVER/argonconfig.py -o $INSTALLATIONFOLDER/argonconfig.py --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argonconfig.py -o $INSTALLATIONFOLDER/argonconfig.py --silent
 sudo chmod 755 $INSTALLATIONFOLDER/argonconfig.py
-sudo curl -L $ARGONDOWNLOADSERVER/argonlogging.py -o $INSTALLATIONFOLDER/argonlogging.py --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argonlogging.py -o $INSTALLATIONFOLDER/argonlogging.py --silent
 sudo chmod 755 $INSTALLATIONFOLDER/argonlogging.py
-sudo curl -L $ARGONDOWNLOADSERVER/version.py -o $INSTALLATIONFOLDER/version.py --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/version.py -o $INSTALLATIONFOLDER/version.py --silent
 sudo chmod 755 $INSTALLATIONFOLDER/version.py
 
 # RTC Setup
@@ -186,11 +186,11 @@ sudo curl -L $ARGONDOWNLOADSERVER/argoneon-rtcconfig.sh -o $rtcconfigscript --si
 sudo chmod 755 $rtcconfigscript
 
 # RTC Daemon/Service Files
-sudo curl -L $ARGONDOWNLOADSERVER/argoneond.py -o $rtcdaemonscript --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argoneond.py -o $rtcdaemonscript --silent
 sudo chmod 644 $rtcdaemonscript 
 sudo curl -L $ARGONDOWNLOADSERVER/argoneond.service -o $daemonrtcservice --silent
 sudo chmod 644 $daemonrtcservice
-sudo curl -L $ARGONDOWNLOADSERVER/argoneonoled.py -o $oledlibscript --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argoneonoled.py -o $oledlibscript --silent
 sudo chmod 755 $oledlibscript
 
 if [ ! -d $INSTALLATIONFOLDER/oled ]
@@ -214,7 +214,7 @@ sudo curl -L $ARGONDOWNLOADSERVER/argon-shutdown.sh -o $shutdownscript --silent
 sudo chmod 755 $shutdownscript
 
 # Argon Status script
-sudo curl -L $ARGONDOWNLOADSERVER/argon-status.py -o $statusscript --silent
+sudo curl -L $ARGONDOWNLOADSERVER/argoneon/argon-status.py -o $statusscript --silent
 sudo chmod 755 $statusscript
 if [ -f /usr/bin/$statuscmd ]
 then

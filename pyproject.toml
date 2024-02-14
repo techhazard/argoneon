@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "argoneon"
+version = "0.0.7"
+description = ""
+authors = ["Jeff Curless <jeff@thecurlesses.com>"]
+license = "unknown"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+rpi-gpio = "^0.7.1"
+psutil = "^5.9.7"
+smbus2 = "^0.4.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+argoneond = "argoneon.argoneond"
+argononed = "argoneon.argononed"
