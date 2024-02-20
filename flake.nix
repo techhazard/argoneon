@@ -140,7 +140,7 @@
         in
           with lib;
           with builtins;
-            mkIf cfg.enable {
+            {
 
 
               environment.etc."argon/argoneon.conf".source = eonConfFile;
