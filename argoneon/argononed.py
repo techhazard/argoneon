@@ -32,11 +32,10 @@ import time
 from threading import Thread
 from queue import Queue
 
-sys.path.append("/etc/argon/")
-from argonsysinfo import *
-from argonlogging import *
-from argonconfig import *
-from version import *
+from argoneon.argonsysinfo import *
+from argoneon.argonlogging import *
+from argoneon.argonconfig import *
+from argoneon.version import *
 
 # Initialize I2C Bus
 import smbus2 as smbus
@@ -55,7 +54,7 @@ OLED_ENABLED=False
 #
 if os.path.exists("/etc/argon/argoneonoled.py"):
     import datetime
-    from argoneonoled import *
+    from argoeon.argoneonoled import *
     OLED_ENABLED=True
 
 #
