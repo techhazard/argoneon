@@ -39,7 +39,7 @@ from argonconfig import *
 from version import *
 
 # Initialize I2C Bus
-import smbus
+import smbus2 as smbus
 
 rev = GPIO.RPI_REVISION
 if rev == 2 or rev == 3:

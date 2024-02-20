@@ -9,7 +9,7 @@ import os
 import time
 
 # Initialize I2C Bus
-import smbus
+import smbus2 as smbus
 import RPi.GPIO as GPIO
 
 rev = GPIO.RPI_REVISION
