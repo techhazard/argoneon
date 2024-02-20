@@ -158,7 +158,7 @@
                   # bus 0 seems related to the vido processor: https://github.com/NixOS/nixos-hardware/blob/72d53d51704295f1645d20384cd13aecc182f624/raspberry-pi/4/i2c.nix#L26
                   # bus 1 seems related to a more general use?: https://github.com/NixOS/nixos-hardware/blob/72d53d51704295f1645d20384cd13aecc182f624/raspberry-pi/4/i2c.nix#L39
                   # for the powerbutton the i2c bus "1" is used, is the other one necessary?
-                  i2c0.enable = false;
+                  i2c0.enable = true;
                   i2c1.enable = true;
                   pwm0.enable = true;
                 };
