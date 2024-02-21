@@ -160,6 +160,7 @@ def setFanSpeed (overrideSpeed : int = None, instantaneous : bool = True):
                 # Spin up to prevent issues on older units
                 bus.write_byte(ADDR_FAN,100)
                 time.sleep(1)
+            logging.info(f"changing fan speed from {prevspeed} to {newspeed}")
             bus.write_byte(ADDR_FAN,int(newspeed))
             logging.debug( "writing to fan port, speed " + str(newspeed))
             argonsysinfo_recordCurrentFanSpeed( newspeed )
