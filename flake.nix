@@ -33,7 +33,8 @@
     devShells = forAllSystems (system: let
       inherit (poetry2nix.lib.mkPoetry2Nix { pkgs = pkgs.${system}; }) mkPoetryEnv;
     in {
-      default = pkgs.${system}.mkShellNoCC {
+      default = pkgs.${system}.mkShell {
+        PYTHON_KEYRING_BACKEND="keyring.backends.null.Keyring";
         packages = with pkgs.${system}; [
           (mkPoetryEnv { projectDir = self; })
           poetry
