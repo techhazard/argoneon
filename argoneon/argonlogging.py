@@ -6,17 +6,21 @@ DATE_FORMAT='%b %d %y %H:%M:%S'
 #
 #
 #
-def enableLogging( enableDebug : bool = False ):
+def enableLogging( enableDebug : bool = False , logfile = LOGGING_FILE):
     if enableDebug:
-        logging.basicConfig( filename=LOGGING_FILE,
-                             filemode='a',
-                             level=logging.DEBUG,
+        level = logging.DEBUG
+    else:
+        level = logging.INFO
+
+    if logfile == 'stdout':
+        logging.basicConfig( stream=sys.stdout,
+                             level=level,
                              format=FORMAT_STRING,
                              datefmt=DATE_FORMAT)
     else:
-        logging.basicConfig( filename=LOGGING_FILE,
+        logging.basicConfig( filename=logfile,
                              filemode='a',
-                             level=logging.INFO,
+                             level=level,
                              format=FORMAT_STRING,
                              datefmt=DATE_FORMAT)
 

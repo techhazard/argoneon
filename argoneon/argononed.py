@@ -57,11 +57,18 @@ except ModuleNotFoundError:
     print("OLED is disabled because python module argoneon.argoneonoled could not be imported", file=sys.stderr)
     OLED_ENABLED=False
 
+# man 5 systemd.exec
+RUNNING_IN_SYSTEMD = ('INVOCATION_ID' in os.environ)
 
 #
 # Enable debug logging if requested
 #
-enableLogging( loadDebugMode() )
+if RUNNING_IN_SYSTEMD:
+    # use stdout
+    enableLogging( loadDebugMode(), 'stdout')
+else:
+    # use default log file
+    enableLogging( loadDebugMode() )
 
 ADDR_FAN=0x1a
 PIN_SHUTDOWN=4
