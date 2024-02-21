@@ -28,6 +28,7 @@ from pathlib import Path
 import sys
 import os
 import time
+import datetime
 
 from threading import Thread
 from queue import Queue
@@ -46,16 +47,16 @@ if rev == 2 or rev == 3:
 else:
     bus=smbus.SMBus(0)
 
-CONFIG_FILE='/etc/argoneon.conf'
-OLED_ENABLED=False
-
 #
-# Enable logging
+# Enable OLED if available
 #
-if os.path.exists("/etc/argon/argoneonoled.py"):
-    import datetime
-    from argoeon.argoneonoled import *
+try:
+    from argoneon.argoneonoled import *
     OLED_ENABLED=True
+except ModuleNotFoundError:
+    print("OLED is disabled because python module argoneon.argoneonoled could not be imported", file=sys.stderr)
+    OLED_ENABLED=False
+
 
 #
 # Enable debug logging if requested
