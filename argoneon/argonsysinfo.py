@@ -283,58 +283,68 @@ def argonsysinfo_listhddusage():
 
     rootdev = argonsysinfo_getrootdev()
 
-    command = os.popen('df')
-    tmp = command.read()
+    command = os.popen('df --output=source,fstype,used,avail,pcent')
+    # split by lines and skip header
+    alllines = command.read().rstrip().split("\n")[1:]
     command.close()
-    alllines = tmp.split("\n")
+    mapper = None
 
-    for temp in alllines:
-        temp = temp.replace('\t', ' ')
-        temp = temp.strip()
-        while temp.find("  ") >= 0:
-            temp = temp.replace("  ", " ")
-        infolist = temp.split(" ")
-        if len(infolist) >= 6:
-            if infolist[1] == "Size":
-                continue
-            if len(infolist[0]) < 5:
-                continue
-            elif infolist[0][0:5] != "/dev/":
-                continue
-            curdev = infolist[0]
-            mapper = None
-            if curdev.startswith('/dev/mapper/'):
-                from pathlib import Path
-                mapper = Path(curdev).readlink().name
 
-            if curdev == "/dev/root" and rootdev != "":
-                curdev = rootdev
+    ignored_filesystems = { 'devtmpfs', 'devpts', 'tmpfs', 'proc', 'sysfs', 'configfs', 'ramfs' }
 
-            tmpidx = curdev.rfind("/")
-            if tmpidx >= 0:
-                curdev = curdev[tmpidx+1:]
-            #
-            # Throw out all devices being used by raid
-            #
-            if curdev in raidlist['hddlist']:
-                continue
-            elif curdev not in raiddevlist and not mapper:
-              if curdev[0:2] == "sd" or curdev[0:2] == "hd":
-                  curdev = curdev[0:-1]
-              else:
-                  curdev = curdev[0:-2]
-                  
-            percent=infolist[4].split("%")[0]
-            if curdev not in outputobj:
-                outputobj[curdev] = {"used":0, "total":0, "percent":0}
-                if  mapper:
-                    outputobj[curdev]["mapper"] = mapper
 
-            outputobj[curdev]["used"]         += int(infolist[2])
-            outputobj[curdev]["total"]        += int(infolist[1])
-            outputobj[curdev]["percent"]       = round(((outputobj[curdev]["used"]/outputobj[curdev]["total"]) * 100),1)
-            #outputobj[curdev]["percent"]      += int(percent)
-    
+    for dfline in alllines:
+        device = ""
+        source, fstype, used, avail, percent = dfline.replace("  ", " ").strip().split()
+
+
+        if fstype in ignored_filesystems:
+            continue
+
+        if source.startswith('/dev/mapper/'):
+            from pathlib import Path
+            mapper = Path(source).readlink().name
+
+        elif source == "/dev/root" and rootdev != "":
+            source = rootdev
+
+        if fstype != "zfs":
+
+            # resolve any symlinks (e.g. /dev/disk/by-id/nvme-my-disk-id -> /dev/nvme0n1
+            source = os.path.realpath(source)
+
+            # keep only device name /dev/nvme0n1 -> nvme0n1
+            source = os.path.basename(source)
+        #
+        # Throw out all devices being used by raid
+        #
+        if source in raidlist['hddlist']:
+            #print(f"in hddlist: {source} {raidlist['hddlist']}")
+            continue
+
+        elif fstype == "zfs":
+            continue
+
+        elif source not in raiddevlist and not mapper:
+          #print(f"source6: {source}")
+          if source[0:2] == "sd" or source[0:2] == "hd":
+              #print(f"source7: {source}")
+              source = source[0:-1]
+          else:
+              #print(f"source: {source}")
+              source = source[0:-2]
+
+        #print(f"source9: {source}")
+        if source not in outputobj:
+            #print(f"source10: {source}")
+            outputobj[source] = {"used":0, "total":0, "percent":0}
+            if mapper:
+                #print(f"source11: {source}")
+                outputobj[source]["mapper"] = mapper
+        outputobj[source]["used"]         += int(used)
+        outputobj[source]["total"]        += int(avail)
+        outputobj[source]["percent"]       = round(((outputobj[source]["used"]/outputobj[source]["total"]) * 100),1)
+
     return outputobj
 
 def argonsysinfo_kbstr(kbval, wholenumbers = True):
