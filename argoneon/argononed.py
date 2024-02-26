@@ -169,6 +169,38 @@ def setFanSpeed (overrideSpeed : int = None, instantaneous : bool = True):
             return prevspeed
     return newspeed
 
+
+def oled_cpu():
+    # CPU Usage
+    if len(curlist) == 0:
+        try:
+            if len(cpuusagelist) == 0:
+                cpuusagelist = argonsysinfo_listcpuusage()
+            curlist = cpuusagelist
+        except:
+            logError( "Error processing information for CPU display")
+            curlist = []
+    if len(curlist) > 0:
+        oled_loadbg("bgcpu")
+
+        # Display List
+        yoffset = 0
+        tmpmax = 4
+        while tmpmax > 0 and len(curlist) > 0:
+            curline = ""
+            tmpitem = curlist.pop(0)
+            curline = tmpitem["title"]+": "+str(tmpitem["value"])+"%"
+            oled_writetext(curline, stdleftoffset, yoffset, fontwdSml)
+            oled_drawfilledrectangle(stdleftoffset, yoffset+12, int((oledscreenwidth-stdleftoffset-4)*tmpitem["value"]/100), 2)
+            tmpmax = tmpmax - 1
+            yoffset = yoffset + 16
+
+        needsUpdate = True
+    else:
+        # Next page due to error/no data
+        screenjogflag = 1
+
+
 def temp_check():
     """
     Main thread for processing the temperature check functonality.  We just try and set the fan speed once
