@@ -376,34 +376,25 @@ def argonsysinfo_listraid():
     ramtotal = 0
     errorflag = False
     try:
-        hddctr = 0
-        tempfp = open("/proc/mdstat", "r")
-        alllines = tempfp.readlines()
-        for temp in alllines:
-            temp = temp.replace('\t', ' ')
-            temp = temp.strip()
-            while temp.find("  ") >= 0:
-                temp = temp.replace("  ", " ")
-            infolist = temp.split(" ")
-            if len(infolist) >= 4:
+        with open("/proc/mdstat", "r") as mdstat:
+            for mdline in mdstat.readlines():
+                mdline = mdline.strip()
 
-                # Check if raid info
-                if infolist[0] != "Personalities" and infolist[1] == ":":
-                    devname = infolist[0]
-                    raidtype = infolist[3]
-                    raidstatus = infolist[2]
-                    hddctr = 4
-                    while hddctr < len(infolist):
-                        tmpdevname = infolist[hddctr]
-                        tmpidx = tmpdevname.find("[")
-                        if tmpidx >= 0:
-                            tmpdevname = tmpdevname[0:tmpidx]
-                        hddlist.append(tmpdevname)
-                        hddctr = hddctr + 1
-                    devdetail = argonsysinfo_getraiddetail(devname)
-                    outputlist.append({"title": devname, "value": raidtype, "info": devdetail})
+                if " : " not in mdline:
+                    continue
+                if mdline.startswith("Personalities"):
+                    continue
+                if mdline.startswith("unused devices"):
+                    continue
 
-        tempfp.close()
+                # _ is the colon
+                devname, _, raidstatus, raidtype, *raiddevices = mdline.split(' ')
+                for raiddev in raiddevices:
+                    #print(f"{devname}: {raiddev}")
+                    hddlist.append(raiddev.split('[')[0])
+
+                devdetail = argonsysinfo_getraiddetail(devname)
+                outputlist.append({"title": devname, "value": raidtype, "info": devdetail})
     except IOError:
         # No raid
         errorflag = True
@@ -411,66 +402,70 @@ def argonsysinfo_listraid():
     return {'raidlist': outputlist, 'hddlist': hddlist}
 
 
-def argonsysinfo_getraiddetail(devname):
-    state = ""
-    raidtype = ""
-    size = 0
-    used = 0
-    total = 0
-    working = 0
-    active = 0
-    failed = 0
-    spare = 0
-    resync = ""
-    hddlist =[]
-    if not checkPermission():
-        command = os.popen('sudo mdadm -D /dev/'+devname)
-    else:
-        command = os.popen('mdadm -D /dev/'+devname)
-    tmp = command.read()
-    command.close()
-    alllines = tmp.split("\n")
+def mdadm_to_dict(devname):
+    """
+    Map the output of mdadm -D to a python dictinary
+    From:
+    ...
+        Raid Level : raid1
+        Array Size : 1046528 (1022.00 MiB 1071.64 MB)
+      Raid Devices : 2
+    ...
+    To:
+    {
+      'raid level': "raid1",
+      'array size': "1046528 (1022.00 MiB 1071.64 MB)",
+      'raid devices': "2",
+    }
 
-    for temp in alllines:
-        temp = temp.replace('\t', ' ')
-        temp = temp.strip()
-        while temp.find("  ") >= 0:
-            temp = temp.replace("  ", " ")
-        infolist = temp.split(" : ")
-        if len(infolist) == 2:
-            if infolist[0].lower() == "raid level":
-                raidtype = infolist[1]
-            elif infolist[0].lower() == "array size":
-                tmpidx = infolist[1].find(" ")
-                if tmpidx > 0:
-                    size = (infolist[1][0:tmpidx])
-            elif infolist[0].lower() == "used dev size":
-                tmpidx = infolist[1].find(" ")
-                if tmpidx > 0:
-                    used = (infolist[1][0:tmpidx])
-            elif infolist[0].lower() == "state":
-                state = infolist[1]
-            elif infolist[0].lower() == "total devices":
-                total = infolist[1]
-            elif infolist[0].lower() == "active devices":
-                active = infolist[1]
-            elif infolist[0].lower() == "working devices":
-                working = infolist[1]
-            elif infolist[0].lower() == "failed devices":
-                failed = infolist[1]
-            elif infolist[0].lower() == "spare devices":
-                spare = infolist[1]
-            elif infolist[0].lower() == "rebuild status":
-                resync = infolist[1]
-            elif infolist[0].lower() == "resync status":
-                resync = infolist[1]
-            elif infolist[0].lower() == "check status":
-                resync = infolist[1]
-        elif len(infolist) > 0:
-            infolist = temp.split(" ")
-            if len(infolist) == 7:
-                hddlist.append(infolist[6])
-    return {'state': state, 'raidtype': raidtype, 'size': int(size), 'used': int(used), 'devices': int(total), 'active': int(active), 'working': int(working), 'failed': int(failed), 'spare': int(spare), 'resync': resync, 'hddlist':hddlist}
+    N.B. devices from pool layout are added to extra "devlist" key
+    """
+    command = os.popen('mdadm -D /dev/'+devname)
+    alllines = command.read().rstrip().split("\n")
+    command.close()
+    raid_metadata = {"devlist": [] }
+
+    for mdline in alllines:
+        mdline = mdline.strip().replace("  ", " ")
+        if " : " in mdline:
+            key, value = mdline.split(" : ", 1)
+            key = key.lower()
+            raid_metadata[key.lower()] = value
+
+        # line that start with dev is the name of the array
+        # (something like "/dev/md127:") which does not split.
+        elif "/dev/" in mdline and not mdline.startswith("/dev/"):
+            # to map bottom list of raid devices
+            # only saves the final columt (i.e. device paths)
+            devname = mdline.rsplit(" ", 1)[1]
+            raid_metadata["devlist"].append(devname)
+
+    return raid_metadata
+
+
+def argonsysinfo_getraiddetail(devname):
+    mddata = mdadm_to_dict(devname)
+
+    resync = mddata.get('rebuild status', "")
+    resync = mddata.get('resync status', "")
+    resync = mddata.get('check status', "")
+
+    hddlist = mddata.get("devlist", [])
+
+    return {
+        'state': mddata['state'],
+        'raidtype': mddata['raid level'],
+        'size': int(mddata['array size'].split()[0]),
+        'used': int(mddata['used dev size'].split()[0]),
+        'devices': int(mddata['total devices']),
+        'active': int(mddata['active devices']),
+        'working': int(mddata['working devices']),
+        'failed': int(mddata['failed devices']),
+        'spare': int(mddata['spare devices']),
+        'resync': resync,
+        'hddlist': hddlist,
+    }
+
 
 def argonsysinfo_diskusagedetail( disk,mapper : str = None ):
     readsector = 0
