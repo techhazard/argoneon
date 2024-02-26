@@ -8,6 +8,7 @@ import os
 import time
 import socket
 import psutil
+import shutil
 from pathlib import Path
 
 fanspeed = Path('/tmp/fanspeed.txt')
@@ -180,10 +181,10 @@ def argonsysinfo_getcputemp():
 
 def argonsysinfo_gethddtemp():
     outputobj = {}
-    hddtempcmd = "/usr/sbin/smartctl"
+    hddtempcmd = "smartctl"
     #smartctl -d sat -A ${device} | grep 194 | awk -F" " '{print $10}'
 
-    if os.path.exists(hddtempcmd):
+    if shutil.which(hddtmpcmd) is not None:
         # try:
             command = os.popen("lsblk | grep -e '0 disk' | awk '{print $1}'")
             tmp = command.read()
