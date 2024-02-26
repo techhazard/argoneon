@@ -399,6 +399,73 @@ def argonsysinfo_listraid():
         # No raid
         errorflag = True
 
+    try:
+        if shutil.which("zpool") is not None:
+            command = os.popen("zpool list -p -H -o name,size,alloc")
+            zfs_pools = command.read().strip().splitlines()
+
+            for pool in zfs_pools:
+                poolname, size, used = pool.split("\t")
+                zpool = os.popen(f"zpool status -L -P -p {poolname}")
+                pool_status = zpool.read().strip()
+
+
+                active = 0
+                devices = 0
+                failed = 0
+                spare = 0
+                pool_state = "UNKNOWN"
+                poolhddlist = []
+                section = ""
+                for statusline in pool_status.splitlines():
+                    print(f"'{statusline}'")
+                    parts = statusline.strip().replace("  ", " ").split()
+                    print(f"'{statusline}'")
+                    print(poolname)
+                    print(parts)
+                    print(len(parts))
+
+                    if len(parts) == 1:
+                        section = parts[0]
+
+                    elif len(parts) == 5:
+                        device, status, read_err, write_err, checksum_err = parts
+
+                        sys.stdout.flush()
+                        if '/dev/' in device:
+                            devices += 1
+                            poolhddlist.append(device)
+
+                            if status == "ONLINE":
+                                active += 1
+                            elif status == "AVAIL" and section == "spares":
+                                spare += 1
+                            else:
+                                failed += 1
+
+                        elif device == poolname:
+                            pool_state = status
+
+                        else:
+                            pass
+
+                hddlist.extend(poolhddlist)
+                outputlist.append({"title": poolname, "value": "zfs", "info": {
+                    'active': active,
+                    'devices': devices,
+                    'failed': failed,
+                    'hddlist': poolhddlist,
+                    'raidtype': 'zfs',
+                    'resync': "",
+                    'state': pool_state.lower(),
+                    'size': int(size) // 1024,
+                    'used': int(used) // 1024,
+                    'working': active,
+                }})
+
+    except Exception:
+        raise
+
     return {'raidlist': outputlist, 'hddlist': hddlist}
 
 
