@@ -104,34 +104,30 @@ def argonsysinfo_liststoragetotal():
     errorflag = False
 
     try:
-        hddctr = 0
-        tempfp = open("/proc/partitions", "r")
-        alllines = tempfp.readlines()
+        with open("/proc/partitions", "r") as partitions:
+            # skip header
+            for partition in partitions.readlines()[1:] :
+                partition.replace("  ", " ")
 
-        for temp in alllines:
-            temp = temp.replace('\t', ' ')
-            temp = temp.strip()
-            while temp.find("  ") >= 0:
-                temp = temp.replace("  ", " ")
-            infolist = temp.split(" ")
-            if len(infolist) >= 4:
-                # Check if header
-                if infolist[3] != "name":
-                    parttype = infolist[3][0:3]
-                    if parttype == "ram":
-                        ramtotal = ramtotal + int(infolist[2])
-                    elif parttype[0:2] == "sd" or parttype[0:2] == "hd":
-                        lastchar = infolist[3][-1]
-                        if lastchar.isdigit() == False:
-                            outputlist.append({"title": infolist[3], "value": argonsysinfo_kbstr(int(infolist[2]))})
-                    else:
+                major, minor, blocks, name = temp.split(" ")
+                if len(infolist) >= 4:
+                    # Check if header
+                    if name.startswith("ram"):
+                        ramtotal = ramtotal + int(blocks)
+
+                    elif name.startswith("sd") or name.startswith("hd"):
+                        lastchar = name[-1]
+                        if not lastchar.isdigit():
+                            outputlist.append({"title": name, "value": argonsysinfo_kbstr(int(blocks))})
+
+                    elif name.startswith("mmc"):
                         # SD Cards
-                        lastchar = infolist[3][-2]
-                        if lastchar[0] != "p":
-                            outputlist.append({"title": infolist[3], "value": argonsysinfo_kbstr(int(infolist[2]))})
+                        lastchars = name[-2]
+                        if lastchars[0] != "p":
+                            outputlist.append({"title": name, "value": argonsysinfo_kbstr(int(blocks))})
+                    else:
+                        pass
 
-        tempfp.close()
-        #outputlist.append({"title": "ram", "value": argonsysinfo_kbstr(ramtotal)})
     except IOError:
         errorflag = True
     return outputlist
