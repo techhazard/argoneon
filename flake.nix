@@ -230,6 +230,7 @@
               systemd.services."argoneond" = {
                 after = ["${moduleName}.target"];
                 bindsTo = ["${moduleName}.target"];
+                wantedBy = ["${moduleName}.target"];
                 path = with pkgs; [
                   smartmontools
                   i2c-tools
@@ -249,6 +250,7 @@
               systemd.services."argononed" = {
                 after = ["${moduleName}.target"];
                 bindsTo = ["${moduleName}.target"];
+                wantedBy = ["${moduleName}.target"];
                 path = with pkgs; [
                   smartmontools
                   zfs
