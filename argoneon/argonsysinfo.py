@@ -267,21 +267,12 @@ def argonsysinfo_getipList():
     return iplist
 
 def argonsysinfo_getrootdev():
-    command = os.popen('mount')
-    tmp = command.read()
-    command.close()
-    alllines = tmp.split("\n")
-
-    for temp in alllines:
-        temp = temp.replace('\t', ' ')
-        temp = temp.strip()
-        while temp.find("  ") >= 0:
-            temp = temp.replace("  ", " ")
-        infolist = temp.split(" ")
-        if len(infolist) >= 3:
-
-            if infolist[2] == "/":
-                return infolist[0]
+    with open('/etc/mtab', 'r') as mtab:
+        mount_lines = mtab.read().rstrip().split("\n")
+    for mountline in mount_lines:
+        device, mountpoint, fstype, *other = mountline.split(' ')
+        if mountpoint == "/":
+            return os.path.realpath(device)
     return ""
 
 def argonsysinfo_listhddusage():
