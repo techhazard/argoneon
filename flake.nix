@@ -144,7 +144,7 @@
             {
 
 
-              environment.etc."argon/argoneon.conf".source = eonConfFile;
+              environment.etc."argoneon.conf".source = eonConfFile;
 
 
               boot.initrd.availableKernelModules = (optionals cfg.i2c ["i2c-bcm2835"]);
