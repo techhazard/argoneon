@@ -13,6 +13,9 @@ from pathlib import Path
 
 fanspeed = Path('/tmp/fanspeed.txt')
 
+def resolvePath(input_path):
+    os.path.realpath(input_path, strict=True)
+
 def checkPermission():
     """
     Determine if the user can properly execute the script.  Must have sudo or be root
